@@ -201,17 +201,17 @@ func (z *zLogger) SetLevel(level Level) {
 
 // Println 打印日志到终端
 func (z *zLogger) Println(args ...interface{}) {
-	fmt.Printf(fmt.Sprintf("%s %s %s %s", getNowTimeMs(), "console", getCallerInfo(consoleSkipNum), fmt.Sprintln(args...)))
+	fmt.Printf("%s %s %s %s", getNowTimeMs(), "console", getCallerInfo(consoleSkipNum), fmt.Sprintln(args...))
 }
 
 // Printfln 打印日志到终端 conslone
 func (z *zLogger) Printfln(format string, args ...interface{}) {
-	fmt.Println(fmt.Sprintf("%s %s %s %s", getNowTimeMs(), "console", getCallerInfo(consoleSkipNum), fmt.Sprintf(format, args...)))
+	fmt.Printf("%s %s %s %s\n", getNowTimeMs(), "console", getCallerInfo(consoleSkipNum), fmt.Sprintf(format, args...))
 }
 
-// Printf 打印日志到终端
+// Printf 打印日志到终端 默认加换行
 func (z *zLogger) Printf(format string, args ...interface{}) {
-	fmt.Println(fmt.Sprintf("%s %s %s %s", getNowTimeMs(), "console", getCallerInfo(consoleSkipNum), fmt.Sprintf(format, args...)))
+	fmt.Printf("%s %s %s %s\n", getNowTimeMs(), "console", getCallerInfo(consoleSkipNum), fmt.Sprintf(format, args...))
 }
 
 // Debug logs a message at level Debug on the compatibleLogger.

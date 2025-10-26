@@ -1,9 +1,28 @@
 package zlog
 
 import (
-	"go.uber.org/zap"
 	"testing"
+
+	"go.uber.org/zap"
 )
+
+func TestLoggerDefault(t *testing.T) {
+	Error("A", "B")
+	Info("A")
+	Println("AAA")
+	Printf("AAA")
+}
+
+func TestLoggerDefaultJSON(t *testing.T) {
+	cfg := GetDefaultConfig()
+	cfg.FileLoggerJSON = true
+	cfg.ConsoleLoggerJSON = true
+	InitLog(cfg)
+	Error("A", "B")
+	Info("A")
+	Println("AAA")
+	Printf("AAA")
+}
 
 func BenchmarkLogger(b *testing.B) {
 	cfg := GetDefaultConfig()

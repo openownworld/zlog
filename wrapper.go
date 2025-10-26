@@ -20,22 +20,29 @@ func (z *zLogWrapper) Sync() error {
 
 // SetLevel set the output log level.
 func (z *zLogWrapper) SetLevel(level Level) {
-	z.SetLevel(level)
+	z.logger.SetLevel(level)
 }
 
 // Println 打印日志到终端
+// var buf strings.Builder
+// buf.WriteString(getNowTimeMs())
+// buf.WriteString(" console ")
+// buf.WriteString(getCallerInfo(consoleSkipNum))
+// buf.WriteString(" ")
+// fmt.Fprintln(&buf, args...)
+// fmt.Print(buf.String())
 func (z *zLogWrapper) Println(args ...interface{}) {
-	fmt.Printf(fmt.Sprintf("%s %s %s %s", getNowTimeMs(), "console", getCallerInfo(consoleSkipNum), fmt.Sprintln(args...)))
+    fmt.Printf("%s %s %s %s", getNowTimeMs(), "console", getCallerInfo(consoleSkipNum), fmt.Sprintln(args...))
 }
 
 // Printfln 打印日志到终端 conslone
 func (z *zLogWrapper) Printfln(format string, args ...interface{}) {
-	fmt.Println(fmt.Sprintf("%s %s %s %s", getNowTimeMs(), "console", getCallerInfo(consoleSkipNum), fmt.Sprintf(format, args...)))
+	fmt.Printf("%s %s %s %s\n", getNowTimeMs(), "console", getCallerInfo(consoleSkipNum), fmt.Sprintf(format, args...))
 }
 
-// Printf 打印日志到终端
+// Printf 打印日志到终端 默认加换行
 func (z *zLogWrapper) Printf(format string, args ...interface{}) {
-	fmt.Println(fmt.Sprintf("%s %s %s %s", getNowTimeMs(), "console", getCallerInfo(consoleSkipNum), fmt.Sprintf(format, args...)))
+	fmt.Printf("%s %s %s %s\n", getNowTimeMs(), "console", getCallerInfo(consoleSkipNum), fmt.Sprintf(format, args...))
 }
 
 // Debug logs a message at level Debug on the compatibleLogger.
