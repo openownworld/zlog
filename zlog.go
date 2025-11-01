@@ -178,13 +178,15 @@ func GetDefaultLogger() Logger {
 }
 
 type zLogger struct {
-	logger *zap.Logger
+	logger      *zap.Logger
+	shortCaller bool
 }
 
 // NewZLogger creates a new logger
 func NewZLogger(logConfig Config) Logger {
 	return &zLogger{
-		logger: getLogger(logConfig),
+		logger:      getLogger(logConfig),
+		shortCaller: logConfig.ShortCaller,
 	}
 }
 
@@ -201,17 +203,17 @@ func (z *zLogger) SetLevel(level Level) {
 
 // Println 打印日志到终端
 func (z *zLogger) Println(args ...interface{}) {
-	fmt.Printf("%s %s %s %s", getNowTimeMs(), "console", getCallerInfo(consoleSkipNum), fmt.Sprintln(args...))
+	fmt.Printf("%s %s %s %s", getNowTimeMs(), "console", getCallerInfo(consoleSkipNum, z.shortCaller), fmt.Sprintln(args...))
 }
 
 // Printfln 打印日志到终端 conslone
 func (z *zLogger) Printfln(format string, args ...interface{}) {
-	fmt.Printf("%s %s %s %s\n", getNowTimeMs(), "console", getCallerInfo(consoleSkipNum), fmt.Sprintf(format, args...))
+	fmt.Printf("%s %s %s %s\n", getNowTimeMs(), "console", getCallerInfo(consoleSkipNum, z.shortCaller), fmt.Sprintf(format, args...))
 }
 
 // Printf 打印日志到终端 默认加换行
 func (z *zLogger) Printf(format string, args ...interface{}) {
-	fmt.Printf("%s %s %s %s\n", getNowTimeMs(), "console", getCallerInfo(consoleSkipNum), fmt.Sprintf(format, args...))
+	fmt.Printf("%s %s %s %s\n", getNowTimeMs(), "console", getCallerInfo(consoleSkipNum, z.shortCaller), fmt.Sprintf(format, args...))
 }
 
 // Debug logs a message at level Debug on the compatibleLogger.
@@ -421,7 +423,7 @@ func getNowTimeMs() string {
 }
 
 // getCallerInfo 0为当前栈 1上层调用栈
-func getCallerInfo(stackNum int) string {
+func getCallerInfo(stackNum int, shortPath bool) string {
 	//0为当前栈 1上层调用栈
 	//pc, file, line, ok := runtime.Caller(stackNum)
 	_, file, line, ok := runtime.Caller(stackNum)
@@ -431,6 +433,16 @@ func getCallerInfo(stackNum int) string {
 	//pcName := runtime.FuncForPC(pc).Name() //获取函数名，听说很耗时
 	//where:= fmt.Sprintf("%v %s %d %t %s",pc,file,line,ok,pcName)
 	//where := fmt.Sprintf("%s %d %s", file, line, pcName)
+
+	// 提取目录名和文件名
+	if shortPath {
+		dir := filepath.Dir(file)
+		base := filepath.Base(file)
+		// 只保留最后一级目录
+		shortDir := filepath.Base(dir)
+		where := fmt.Sprintf("%s/%s:%d", shortDir, base, line)
+		return where
+	}
 	where := fmt.Sprintf("%s:%d", file, line) //冒号拼接，goland可以直接点开到文件行数
 	return where
 }

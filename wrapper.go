@@ -5,10 +5,6 @@
 
 package zlog
 
-import (
-	"fmt"
-)
-
 type zLogWrapper struct {
 	logger Logger
 }
@@ -32,17 +28,17 @@ func (z *zLogWrapper) SetLevel(level Level) {
 // fmt.Fprintln(&buf, args...)
 // fmt.Print(buf.String())
 func (z *zLogWrapper) Println(args ...interface{}) {
-    fmt.Printf("%s %s %s %s", getNowTimeMs(), "console", getCallerInfo(consoleSkipNum), fmt.Sprintln(args...))
+	z.Println(args...)
 }
 
 // Printfln 打印日志到终端 conslone
 func (z *zLogWrapper) Printfln(format string, args ...interface{}) {
-	fmt.Printf("%s %s %s %s\n", getNowTimeMs(), "console", getCallerInfo(consoleSkipNum), fmt.Sprintf(format, args...))
+	z.Printfln(format, args...)
 }
 
 // Printf 打印日志到终端 默认加换行
 func (z *zLogWrapper) Printf(format string, args ...interface{}) {
-	fmt.Printf("%s %s %s %s\n", getNowTimeMs(), "console", getCallerInfo(consoleSkipNum), fmt.Sprintf(format, args...))
+	z.Printf(format, args...)
 }
 
 // Debug logs a message at level Debug on the compatibleLogger.
