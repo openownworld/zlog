@@ -52,12 +52,13 @@ func TestLogger(t *testing.T) {
 
 func TestCfg(t *testing.T) {
 	cfg := GetDefaultConfig()
-	cfg.ShortCaller = false
+	cfg.ShortCaller = false // 短路径
 	cfg.ServiceName = "app"
 	InitLog(cfg)
 	Error("A", "B")
 	With(Field{Key: "describe", Value: "instance"}).Error("describe2")
 	WithField("log", "test").Info("A", "B")
+	Println("A", "B")
 }
 
 func TestCfgJson(t *testing.T) {

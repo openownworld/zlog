@@ -28,17 +28,17 @@ func (z *zLogWrapper) SetLevel(level Level) {
 // fmt.Fprintln(&buf, args...)
 // fmt.Print(buf.String())
 func (z *zLogWrapper) Println(args ...interface{}) {
-	z.Println(args...)
+	z.logger.Println(args...)
 }
 
 // Printfln 打印日志到终端 conslone
 func (z *zLogWrapper) Printfln(format string, args ...interface{}) {
-	z.Printfln(format, args...)
+	z.logger.Printfln(format, args...)
 }
 
 // Printf 打印日志到终端 默认加换行
 func (z *zLogWrapper) Printf(format string, args ...interface{}) {
-	z.Printf(format, args...)
+	z.logger.Printf(format, args...)
 }
 
 // Debug logs a message at level Debug on the compatibleLogger.
@@ -114,4 +114,9 @@ func (z *zLogWrapper) WithField(key string, value interface{}) Logger {
 // WithFields return a logger with extra fields.
 func (z *zLogWrapper) WithFields(fields map[string]interface{}) Logger {
 	return z.logger.WithFields(fields)
+}
+
+// Log 兼容 Kratos Logger 接口
+func (z *zLogWrapper) Log(level Level, keyvals ...any) error {
+	return z.logger.Log(level, keyvals...)
 }

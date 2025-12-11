@@ -18,10 +18,6 @@ package zlog
 
 import (
 	"fmt"
-	"github.com/go-ini/ini"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-	"gopkg.in/natefinch/lumberjack.v2"
 	"io"
 	"io/ioutil"
 	"net"
@@ -31,6 +27,11 @@ import (
 	"runtime"
 	"sync"
 	"time"
+
+	"github.com/go-ini/ini"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 // Levels is the map from string to zapcore.Level.
@@ -274,6 +275,66 @@ func (z *zLogger) Fatal(args ...interface{}) {
 // Fatalf logs a message at level Fatal on the compatibleLogger. followed by a call to os.Exit(1).
 func (z *zLogger) Fatalf(format string, args ...interface{}) {
 	z.logger.Fatal(fmt.Sprintf(format, args...))
+}
+
+// 兼容 Kratos Logger 接口
+// Log 方法接收日志级别和键值对参数，兼容 Kratos Logger 接口
+// keyvals 应该是成对出现的键值对，例如: Log(LevelInfo, "key1", "value1", "key2", "value2")
+// 如果存在 "msg" 键，其值将作为主消息；其他键值对将作为字段
+func (z *zLogger) Log(level Level, keyvals ...any) error {
+	if len(keyvals) == 0 {
+		return nil
+	}
+
+	// 解析键值对
+	var msg string
+	var fields []zap.Field
+
+	// 处理键值对，支持奇数个参数（最后一个作为消息）或偶数个参数（都是键值对）
+	for i := 0; i < len(keyvals); i += 2 {
+		if i+1 < len(keyvals) {
+			// 成对的键值
+			key, ok := keyvals[i].(string)
+			if !ok {
+				key = fmt.Sprintf("%v", keyvals[i])
+			}
+			value := keyvals[i+1]
+
+			if key == "msg" || key == "message" {
+				msg = fmt.Sprintf("%v", value)
+			} else {
+				fields = append(fields, zap.Any(key, value))
+			}
+		} else {
+			// 奇数个参数，最后一个作为消息
+			msg = fmt.Sprintf("%v", keyvals[i])
+		}
+	}
+
+	// 如果没有消息，使用默认消息
+	if msg == "" {
+		msg = "log message"
+	}
+
+	// 根据日志级别调用对应的 zap logger 方法
+	switch level {
+	case LevelDebug:
+		z.logger.Debug(msg, fields...)
+	case LevelInfo:
+		z.logger.Info(msg, fields...)
+	case LevelWarn:
+		z.logger.Warn(msg, fields...)
+	case LevelError:
+		z.logger.Error(msg, fields...)
+	case LevelPanic:
+		z.logger.Panic(msg, fields...)
+	case LevelFatal:
+		z.logger.Fatal(msg, fields...)
+	default:
+		z.logger.Info(msg, fields...)
+	}
+
+	return nil
 }
 
 // With return a logger with an extra field.

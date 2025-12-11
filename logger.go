@@ -51,6 +51,8 @@ type Logger interface {
 	Println(args ...interface{})
 	// Printf print console
 	Printf(format string, args ...interface{})
+	// Printfln print console with format
+	Printfln(format string, args ...interface{})
 	// Debug logs to DEBUG log. Arguments are handled in the manner of fmt.Print.
 	Debug(args ...interface{})
 	// Debugf logs to DEBUG log. Arguments are handled in the manner of fmt.Printf.
@@ -90,4 +92,6 @@ type Logger interface {
 	WithField(key string, value interface{}) Logger
 	// With add user defined fields to Logger. Fields support multiple values.
 	With(fields ...Field) Logger
+	// Log 兼容 Kratos Logger 接口，接收日志级别和键值对参数
+	Log(level Level, keyvals ...any) error
 }
