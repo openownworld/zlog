@@ -90,6 +90,8 @@ type Config struct {
 	FileLoggerJSON     bool   `ini:"fileLoggerJSON"`     // 启用 file LoggerJSON
 	ConsoleLogger      bool   `ini:"consoleLogger"`      // 启用 console Logger
 	ConsoleLoggerJSON  bool   `ini:"consoleLoggerJSON"`  // 启用 console LoggerJSON
+	// ConsoleToStdout 控制台输出目标：默认(false) 写 stderr；置 true 写 stdout。
+	ConsoleToStdout bool `ini:"consoleToStdout"`
 }
 
 // InitLogByFile 确保日志最先初始化 log.ini
@@ -181,14 +183,25 @@ func GetDefaultLogger() Logger {
 type zLogger struct {
 	logger      *zap.Logger
 	shortCaller bool
+	// cydata 改造：Print* 系列输出目标，默认 stderr；ConsoleToStdout=true 时写 stdout。
+	consoleToStdout bool
 }
 
 // NewZLogger creates a new logger
 func NewZLogger(logConfig Config) Logger {
 	return &zLogger{
-		logger:      getLogger(logConfig),
-		shortCaller: logConfig.ShortCaller,
+		logger:          getLogger(logConfig),
+		shortCaller:     logConfig.ShortCaller,
+		consoleToStdout: logConfig.ConsoleToStdout,
 	}
+}
+
+// consoleOut 返回 Print* 系列的输出目标（默认 stderr）。
+func (z *zLogger) consoleOut() *os.File {
+	if z.consoleToStdout {
+		return os.Stdout
+	}
+	return os.Stderr
 }
 
 // Sync 在默认情况下，日志记录器是没有缓冲的。但是在进程退出之前调用 Sync() 方法是一个好习惯。
@@ -202,19 +215,19 @@ func (z *zLogger) SetLevel(level Level) {
 	atomLevel.SetLevel(v)
 }
 
-// Println 打印日志到终端
+// Println 打印日志到终端（cydata 改造：默认 stderr）
 func (z *zLogger) Println(args ...interface{}) {
-	fmt.Printf("%s %s %s %s", getNowTimeMs(), "console", getCallerInfo(consoleSkipNum, z.shortCaller), fmt.Sprintln(args...))
+	fmt.Fprintf(z.consoleOut(), "%s %s %s %s", getNowTimeMs(), "console", getCallerInfo(consoleSkipNum, z.shortCaller), fmt.Sprintln(args...))
 }
 
-// Printfln 打印日志到终端 conslone
+// Printfln 打印日志到终端 conslone（cydata 改造：默认 stderr）
 func (z *zLogger) Printfln(format string, args ...interface{}) {
-	fmt.Printf("%s %s %s %s\n", getNowTimeMs(), "console", getCallerInfo(consoleSkipNum, z.shortCaller), fmt.Sprintf(format, args...))
+	fmt.Fprintf(z.consoleOut(), "%s %s %s %s\n", getNowTimeMs(), "console", getCallerInfo(consoleSkipNum, z.shortCaller), fmt.Sprintf(format, args...))
 }
 
-// Printf 打印日志到终端 默认加换行
+// Printf 打印日志到终端 默认加换行（cydata 改造：默认 stderr）
 func (z *zLogger) Printf(format string, args ...interface{}) {
-	fmt.Printf("%s %s %s %s\n", getNowTimeMs(), "console", getCallerInfo(consoleSkipNum, z.shortCaller), fmt.Sprintf(format, args...))
+	fmt.Fprintf(z.consoleOut(), "%s %s %s %s\n", getNowTimeMs(), "console", getCallerInfo(consoleSkipNum, z.shortCaller), fmt.Sprintf(format, args...))
 }
 
 // Debug logs a message at level Debug on the compatibleLogger.
@@ -564,7 +577,12 @@ func getLogger(logConfig Config) *zap.Logger {
 	var allWriter zapcore.WriteSyncer
 	var errorWriter zapcore.WriteSyncer
 	if logConfig.ConsoleLogger {
-		consoleWriter = zapcore.Lock(os.Stdout)
+		// cydata 改造：控制台默认写 stderr（可经 ConsoleToStdout 切到 stdout）。
+		consoleTarget := os.Stderr
+		if logConfig.ConsoleToStdout {
+			consoleTarget = os.Stdout
+		}
+		consoleWriter = zapcore.Lock(consoleTarget)
 	} else {
 		consoleWriter = zapcore.AddSync(ioutil.Discard)
 	}
